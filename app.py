@@ -28,8 +28,22 @@ FEATURES = [
     'SII', 'Serum potassium (mmol/L)', 'Operation time (mins)', 'Surgery type'
 ]
 
-# Numeric features that receive RobustScaling (all except Surgery type)
-NUMERIC_FEATURES = [f for f in FEATURES if f != 'Surgery type']
+# Numeric features that receive RobustScaling (all except Surgery type).
+# Order MUST match notebook `final_numeric = [c for c in numeric_cols if c in best_with_intraoperative]`
+# (iteration order of `numeric_cols`, not the same as FEATURES / model column order).
+SCALER_NUMERIC_ORDER = [
+    'Operation time (mins)',
+    'Age (years)',
+    'BMI',
+    'Serum creatinine (μmol/L)',
+    'Serum albumin (g/L)',
+    'Urea (mmol/L)',
+    'Serum potassium (mmol/L)',
+    'NLR',
+    'PLR',
+    'SII',
+    'UCR',
+]
 
 # Skewed numeric features that receive log1p transformation before scaling
 SKEWED_FEATURES = [
@@ -89,8 +103,8 @@ def preprocess(inputs: dict, scaler) -> pd.DataFrame:
     for col in SKEWED_FEATURES:
         df[col] = np.log1p(df[col])
 
-    # Step 2 – RobustScaler on numeric features
-    df[NUMERIC_FEATURES] = scaler.transform(df[NUMERIC_FEATURES])
+    # Step 2 – RobustScaler on numeric features (column order = fit order in notebook)
+    df[SCALER_NUMERIC_ORDER] = scaler.transform(df[SCALER_NUMERIC_ORDER])
 
     # Step 3 – sanitise column names (matches notebook behaviour)
     df.columns = df.columns.str.replace('[^A-Za-z0-9_]+', '_', regex=True)
